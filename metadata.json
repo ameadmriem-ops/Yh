@@ -1,0 +1,6 @@
+{
+  "name": "MY IPTV",
+  "description": "تطبيق MY IPTV لإدارة ومشاهدة القنوات مع نظام المشاهدة اليومية وإعلانات المكافأة",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
