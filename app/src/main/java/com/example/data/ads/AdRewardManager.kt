@@ -7,18 +7,19 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.OnUserEarnedRewardListener
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.example.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * مدير إعلانات المكافأة (Rewarded Ads Manager)
- * يضمن الالتزام الصارم بقواعد الاختبار:
- * - استخدام معرف Google الرسمي لإعلانات الاختبار عندما يكون IS_TEST_AD = true
- * - عدم استخدام الإعلان الحقيقي في وضع الاختبار
- * - عدم احتساب أي مكافأة إلا بعد وصول Reward Callback
+ * - في نسخة الإنتاج Release: يستخدم حصراً المعرف الحقيقي ca-app-pub-8410578267301371/4181816334
+ * - يحافظ على: RewardedAd.load, RewardedAd.show, RewardedAdLoadCallback, OnUserEarnedRewardListener
+ * - لا يتم احتساب أي مكافأة إلا بعد استلام Reward Callback الفعلي من Google AdMob
  */
 class AdRewardManager(private val context: Context) {
 
@@ -44,14 +45,14 @@ class AdRewardManager(private val context: Context) {
     }
 
     /**
-     * تحميل إعلان المكافأة مسبقاً
+     * تحميل إعلان المكافأة مسبقاً (RewardedAd.load)
      */
     fun preloadRewardedAd() {
         if (isAdLoading || rewardedAd != null) return
 
         isAdLoading = true
-        val adUnitId = AdConfig.getActiveRewardedAdUnitId()
-        Log.d(TAG, "Loading Rewarded Ad with Unit ID: $adUnitId (IS_TEST_AD = ${AdConfig.IS_TEST_AD})")
+        val adUnitId = AdConfig.REWARDED_AD_UNIT_ID
+        Log.d(TAG, "Loading Rewarded Ad with Unit ID: $adUnitId (DEBUG = ${BuildConfig.DEBUG})")
 
         val adRequest = AdRequest.Builder().build()
         RewardedAd.load(
@@ -77,11 +78,11 @@ class AdRewardManager(private val context: Context) {
     }
 
     /**
-     * عرض إعلان المكافأة
+     * عرض إعلان المكافأة (RewardedAd.show)
      * @param activity النشاط الحالي
-     * @param onRewardEarned استدعاء عند تحقق المكافأة فقط (Reward callback)
+     * @param onRewardEarned استدعاء عند تحقق المكافأة عبر OnUserEarnedRewardListener
      * @param onAdDismissed استدعاء عند إغلاق الإعلان
-     * @param onFallbackNeeded إذا تعذر عرض الإعلان عبر Google Play Services في بيئة الاختبار
+     * @param onFallbackNeeded في بيئة الاختبار والتطوير فقط
      */
     fun showRewardedAd(
         activity: Activity,
@@ -107,16 +108,21 @@ class AdRewardManager(private val context: Context) {
                 }
             }
 
-            currentAd.show(activity) { rewardItem ->
+            val rewardListener = OnUserEarnedRewardListener { rewardItem ->
                 // لا يتم احتساب الإعلان إلا بعد وصول هذا الـ Reward callback
                 Log.d(TAG, "User earned reward: ${rewardItem.amount} ${rewardItem.type}")
                 rewardGranted = true
                 onRewardEarned()
             }
+
+            currentAd.show(activity, rewardListener)
         } else {
-            // الإعلان لم يجهز بعد أو غير متاح في بيئة المحاكي/الاختبار
-            Log.d(TAG, "Rewarded ad is not ready. Triggering test fallback.")
-            onFallbackNeeded()
+            if (BuildConfig.DEBUG && AdConfig.isTestAdMode) {
+                Log.d(TAG, "Rewarded ad is not ready. Triggering test simulation in DEBUG mode.")
+                onFallbackNeeded()
+            } else {
+                Log.w(TAG, "Rewarded ad is not ready yet in Production.")
+            }
             preloadRewardedAd()
         }
     }

@@ -30,8 +30,8 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
     private val _isUnlocked = MutableStateFlow(false)
     val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
 
-    // وضع إعلانات الاختبار
-    private val _isTestAdMode = MutableStateFlow(AdConfig.IS_TEST_AD)
+    // وضع إعلانات الاختبار (متاح فقط في Debug)
+    private val _isTestAdMode = MutableStateFlow(AdConfig.isTestAdMode)
     val isTestAdMode: StateFlow<Boolean> = _isTestAdMode.asStateFlow()
 
     // القناة الجاري تشغيلها حالياً
@@ -115,11 +115,15 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * تغيير وضع إعلان الاختبار (IS_TEST_AD)
+     * تغيير وضع إعلان الاختبار (متاح فقط في Debug للتطوير)
      */
     fun setTestAdMode(enabled: Boolean) {
-        AdConfig.IS_TEST_AD = enabled
-        _isTestAdMode.value = enabled
+        if (!com.example.BuildConfig.DEBUG) {
+            _snackbarMessage.value = "وضع الإنتاج مفعل: يتم استخدام الإعلانات الحقيقية فقط"
+            return
+        }
+        AdConfig.debugSimulationActive = enabled
+        _isTestAdMode.value = AdConfig.isTestAdMode
         adManager.preloadRewardedAd()
         _snackbarMessage.value = if (enabled) {
             "تم تفعيل إعلانات الاختبار (TEST AD)"

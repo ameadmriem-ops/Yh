@@ -41,12 +41,26 @@ android {
 
   buildTypes {
     release {
+      isDebuggable = false
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      signingConfig = if (System.getenv("STORE_PASSWORD") != null && file(System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks").exists()) {
+        signingConfigs.getByName("release")
+      } else {
+        signingConfigs.getByName("debugConfig")
+      }
+      buildConfigField("String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-8410578267301371/4181816334\"")
+      buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-8410578267301371~7948926096\"")
+      manifestPlaceholders["admobAppId"] = "ca-app-pub-8410578267301371~7948926096"
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      isDebuggable = true
+      signingConfig = signingConfigs.getByName("debugConfig")
+      buildConfigField("String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/5224354917\"")
+      buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
+      manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11

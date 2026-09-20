@@ -1,53 +1,49 @@
 package com.example.data.ads
 
+import com.example.BuildConfig
+
 /**
  * إعدادات إعلانات AdMob
- * تفصل بين إعدادات ومعرفات الإعلانات الحقيقية وإعلانات الاختبار Test Ads
+ * - في نسخة Release Production: يتم استخدام المعرفات الحقيقية فقط وبشكل قطعي.
+ * - إعلانات الاختبار متاحة حصراً في وضع Debug للتطوير (BuildConfig.DEBUG).
  */
 object AdConfig {
     // --------------------------------------------------------------------
-    // المعرفات الحقيقية (Real IDs) - محفوظة في إعدادات منفصلة
+    // المعرفات الحقيقية الرسمية (Real IDs) - المستخدمة لنسخة Release Production
     // --------------------------------------------------------------------
     const val REAL_ADMOB_APP_ID = "ca-app-pub-8410578267301371~7948926096"
     const val REAL_AD_UNIT_ID = "ca-app-pub-8410578267301371/4181816334"
 
-    // --------------------------------------------------------------------
-    // معرفات إعلانات الاختبار الرسمية من Google (Google Official Test IDs)
-    // --------------------------------------------------------------------
-    const val TEST_ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713"
-    const val TEST_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
-
-    // --------------------------------------------------------------------
-    // المتغير المطلوب: IS_TEST_AD
-    // عندما يكون true:
-    // - يستخدم Test Ad
-    // - لا يستخدم الإعلان الحقيقي
-    // - لا يتم احتساب الإعلان إلا بعد وصول Reward callback
-    // - يظهر في الواجهة بشكل واضح: TEST AD
-    // وعندما يكون false:
-    // - يمكن استخدام معرف الإعلان الحقيقي
-    // --------------------------------------------------------------------
-    var IS_TEST_AD: Boolean = true
-
     /**
-     * إرجاع معرف وحدة الإعلان بناءً على وضع الاختبار
+     * المعرف الفعلي لوحدة الإعلان:
+     * - في Release: يعود دائماً بـ REAL_AD_UNIT_ID ("ca-app-pub-8410578267301371/4181816334").
+     * - في Debug: يعود بالقيمة المعرفة للتطوير من BuildConfig.
      */
-    fun getActiveRewardedAdUnitId(): String {
-        return if (IS_TEST_AD) {
-            TEST_REWARDED_AD_UNIT_ID
+    val REWARDED_AD_UNIT_ID: String
+        get() = if (BuildConfig.DEBUG) {
+            BuildConfig.REWARDED_AD_UNIT_ID
         } else {
             REAL_AD_UNIT_ID
         }
-    }
 
     /**
-     * إرجاع معرف التطبيق بناءً على وضع الاختبار
+     * معرف تطبيق AdMob
      */
-    fun getActiveAppId(): String {
-        return if (IS_TEST_AD) {
-            TEST_ADMOB_APP_ID
+    val ADMOB_APP_ID: String
+        get() = if (BuildConfig.DEBUG) {
+            BuildConfig.ADMOB_APP_ID
         } else {
             REAL_ADMOB_APP_ID
         }
-    }
+
+    /**
+     * التحقق من وضع الاختبار:
+     * - في Release: دائمًا false قطعياً.
+     * - في Debug: متاح فقط أثناء التطوير.
+     */
+    val isTestAdMode: Boolean
+        get() = BuildConfig.DEBUG && debugSimulationActive
+
+    // متغير تحكم محلي للتطوير فقط في وضع Debug
+    var debugSimulationActive: Boolean = BuildConfig.DEBUG
 }
