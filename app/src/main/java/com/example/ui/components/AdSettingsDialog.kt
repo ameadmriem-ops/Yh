@@ -1,8 +1,6 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,17 +12,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,8 +35,6 @@ import com.example.data.ads.AdConfig
 
 @Composable
 fun AdSettingsDialog(
-    isTestAdMode: Boolean,
-    onToggleTestAdMode: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -58,7 +50,7 @@ fun AdSettingsDialog(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("إعدادات إعلانات AdMob", fontWeight = FontWeight.Bold)
+                Text("معلومات إعلانات AdMob", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -68,87 +60,75 @@ fun AdSettingsDialog(
                     .verticalScroll(rememberScrollState())
                     .testTag("ad_settings_content")
             ) {
-                if (com.example.BuildConfig.DEBUG) {
-                    // تفعيل / تعطيل وضع الاختبار في بيئة التطوير Debug فقط
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isTestAdMode) Color(0xFFFFF9E6) else MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                // بطاقة الإعلان الحقيقي
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE8F5E9)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "وضع الاختبار (DEBUG)",
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    if (isTestAdMode) {
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        BoxBadge("TEST AD")
-                                    }
-                                }
-                                Text(
-                                    text = if (isTestAdMode) {
-                                        "يستخدم إعلانات Rewarded Test Ad للتطوير"
-                                    } else {
-                                        "يستخدم الإعلانات ومعرفات AdMob الحقيقية"
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            Switch(
-                                checked = isTestAdMode,
-                                onCheckedChange = onToggleTestAdMode,
-                                modifier = Modifier.testTag("test_ad_switch")
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                } else {
-                    // في وضع الإنتاج Release: إشعار واضح بأن الإنتاج مفعّل
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFE8F5E9)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
                             Text(
-                                text = "نسخة الإنتاج (Production Release)",
+                                text = "الإعلانات الحقيقية مفعلة",
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF2E7D32),
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "تستخدم هذه النسخة حصرياً معرفات AdMob الحقيقية المعتمدة لـ MyMovies بدون أي إعلانات تجريبية.",
+                                text = "يتم استخدام الإعلانات الحقيقية فقط بدون أي إعلانات تجريبية.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF1B5E20)
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(14.dp))
                 }
 
-                // المعرف الحالي المستخدم
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // بطاقة التجاوز الذكي في حال عدم توفر إعلان
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "نظام الاحتساب التلقائي:",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "إذا لم يجد التطبيق إعلاناً جاهزاً من Google AdMob، يتم احتساب المشاهدة مباشرة لتسهيل فتح القنوات بدون انقطاع.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // بيانات AdMob المعتمدة
                 Text(
-                    text = "معرف وحدة الإعلان المستخدم (Rewarded Ad Unit ID):",
+                    text = "معرف وحدة إعلان المكافأة (Rewarded Ad Unit ID):",
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = AdConfig.REWARDED_AD_UNIT_ID,
+                    text = AdConfig.REAL_AD_UNIT_ID,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.primary,
@@ -159,17 +139,16 @@ fun AdSettingsDialog(
                         .padding(8.dp)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // تفاصيل المعرفات الحقيقية
                 Text(
-                    text = "بيانات AdMob الرسمية للتطبيق:",
-                    fontWeight = FontWeight.SemiBold,
+                    text = "معرف تطبيق AdMob (App ID):",
+                    fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodySmall
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "AdMob App ID:\n${AdConfig.REAL_ADMOB_APP_ID}\n\nRewarded Ad Unit ID:\n${AdConfig.REAL_AD_UNIT_ID}",
+                    text = AdConfig.REAL_ADMOB_APP_ID,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -190,20 +169,5 @@ fun AdSettingsDialog(
             }
         },
         shape = RoundedCornerShape(16.dp)
-    )
-}
-
-@Composable
-private fun BoxBadge(text: String) {
-    Text(
-        text = text,
-        color = Color(0xFF856404),
-        fontWeight = FontWeight.Bold,
-        fontSize = 10.sp,
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(Color(0xFFFFF3CD))
-            .border(1.dp, Color(0xFFFFC107), RoundedCornerShape(4.dp))
-            .padding(horizontal = 4.dp, vertical = 2.dp)
     )
 }

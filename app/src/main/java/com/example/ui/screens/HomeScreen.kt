@@ -71,7 +71,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.Channel
 import com.example.ui.components.AddChannelDialog
 import com.example.ui.components.AdSettingsDialog
-import com.example.ui.components.TestAdDialog
 import com.example.ui.components.VideoPlayerView
 import com.example.ui.viewmodel.IptvViewModel
 
@@ -87,10 +86,8 @@ fun HomeScreen(
     val channels by viewModel.channels.collectAsState()
     val watchCount by viewModel.watchCount.collectAsState()
     val isUnlocked by viewModel.isUnlocked.collectAsState()
-    val isTestAdMode by viewModel.isTestAdMode.collectAsState()
     val currentChannel by viewModel.currentPlayingChannel.collectAsState()
     val showAddDialog by viewModel.showAddDialog.collectAsState()
-    val showTestAdSimulator by viewModel.showTestAdSimulator.collectAsState()
     val showAdSettingsDialog by viewModel.showAdSettingsDialog.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
 
@@ -118,26 +115,6 @@ fun HomeScreen(
                             fontWeight = FontWeight.Black,
                             style = MaterialTheme.typography.titleLarge
                         )
-
-                        // إظهار شارة TEST AD بوضوح تام في الواجهة
-                        if (isTestAdMode) {
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Surface(
-                                color = Color(0xFFFFF3CD),
-                                shape = RoundedCornerShape(6.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFFFC107)),
-                                modifier = Modifier.testTag("test_ad_badge")
-                            ) {
-                                Text(
-                                    text = "TEST AD",
-                                    color = Color(0xFF856404),
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 11.sp,
-                                    letterSpacing = 1.sp,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
                     }
                 },
                 actions = {
@@ -197,7 +174,6 @@ fun HomeScreen(
             DailyWatchCard(
                 watchCount = watchCount,
                 isUnlocked = isUnlocked,
-                isTestAdMode = isTestAdMode,
                 onWatchAdClick = {
                     activity?.let { viewModel.watchRewardAd(it) }
                 },
@@ -247,23 +223,9 @@ fun HomeScreen(
         )
     }
 
-    // نافذة محاكي إعلانات الاختبار Test Ad
-    if (showTestAdSimulator) {
-        TestAdDialog(
-            onRewardCallbackReceived = {
-                viewModel.onUserEarnedRewardCallback()
-            },
-            onDismiss = {
-                viewModel.setShowTestAdSimulator(false)
-            }
-        )
-    }
-
     // نافذة إعدادات الإعلانات
     if (showAdSettingsDialog) {
         AdSettingsDialog(
-            isTestAdMode = isTestAdMode,
-            onToggleTestAdMode = { viewModel.setTestAdMode(it) },
             onDismiss = { viewModel.setShowAdSettingsDialog(false) }
         )
     }
@@ -278,7 +240,6 @@ fun HomeScreen(
 fun DailyWatchCard(
     watchCount: Int,
     isUnlocked: Boolean,
-    isTestAdMode: Boolean,
     onWatchAdClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -399,7 +360,7 @@ fun DailyWatchCard(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isTestAdMode) "مشاهدة TEST AD" else "مشاهدة إعلان",
+                            text = "مشاهدة إعلان",
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )

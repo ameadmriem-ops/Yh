@@ -30,10 +30,6 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
     private val _isUnlocked = MutableStateFlow(false)
     val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
 
-    // وضع إعلانات الاختبار (متاح فقط في Debug)
-    private val _isTestAdMode = MutableStateFlow(AdConfig.isTestAdMode)
-    val isTestAdMode: StateFlow<Boolean> = _isTestAdMode.asStateFlow()
-
     // القناة الجاري تشغيلها حالياً
     private val _currentPlayingChannel = MutableStateFlow<Channel?>(null)
     val currentPlayingChannel: StateFlow<Channel?> = _currentPlayingChannel.asStateFlow()
@@ -42,11 +38,7 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
     private val _showAddDialog = MutableStateFlow(false)
     val showAddDialog: StateFlow<Boolean> = _showAddDialog.asStateFlow()
 
-    // إظهار محاكي إعلان الاختبار (إذا تعذر AdMob المباشر في بيئة التطوير)
-    private val _showTestAdSimulator = MutableStateFlow(false)
-    val showTestAdSimulator: StateFlow<Boolean> = _showTestAdSimulator.asStateFlow()
-
-    // إظهار نافذة إعدادات الإعلانات
+    // إظهار نافذة تفاصيل الإعلانات
     private val _showAdSettingsDialog = MutableStateFlow(false)
     val showAdSettingsDialog: StateFlow<Boolean> = _showAdSettingsDialog.asStateFlow()
 
@@ -115,25 +107,9 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * تغيير وضع إعلان الاختبار (متاح فقط في Debug للتطوير)
-     */
-    fun setTestAdMode(enabled: Boolean) {
-        if (!com.example.BuildConfig.DEBUG) {
-            _snackbarMessage.value = "وضع الإنتاج مفعل: يتم استخدام الإعلانات الحقيقية فقط"
-            return
-        }
-        AdConfig.debugSimulationActive = enabled
-        _isTestAdMode.value = AdConfig.isTestAdMode
-        adManager.preloadRewardedAd()
-        _snackbarMessage.value = if (enabled) {
-            "تم تفعيل إعلانات الاختبار (TEST AD)"
-        } else {
-            "تم التحويل إلى وضع الإعلانات الحقيقية"
-        }
-    }
-
-    /**
-     * بدء مشاهدة إعلان مكافأة لزيادة الرصيد اليومي
+     * بدء مشاهدة إعلان مكافأة لزيادة الرصيد اليومي:
+     * - يعرض الإعلان الحقيقي إذا وجد.
+     * - إذا لم يجد التطبيق إعلاناً جاهزاً، يتم احتساب المشاهدة مباشرة للمستخدم.
      */
     fun watchRewardAd(activity: Activity) {
         if (_isUnlocked.value) {
@@ -143,34 +119,32 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
 
         adManager.showRewardedAd(
             activity = activity,
-            onRewardEarned = {
-                // وصول Reward callback الفعلي من Google AdMob
-                onUserEarnedRewardCallback()
+            onRewardEarned = { wasAdShown ->
+                onUserEarnedRewardCallback(wasAdShown)
             },
             onAdDismissed = {
-                // إغلاق الإعلان
-            },
-            onFallbackNeeded = {
-                // عند استخدام Test Ad في بيئة لا تحتوي على Google Play Services
-                _showTestAdSimulator.value = true
+                // تم إغلاق الإعلان
             }
         )
     }
 
     /**
-     * احتساب المكافأة فقط عند وصول الـ callback
+     * احتساب المشاهدة وتحديث حالة القنوات
      */
-    fun onUserEarnedRewardCallback() {
+    fun onUserEarnedRewardCallback(wasAdShown: Boolean = true) {
         val newCount = repository.incrementWatchCount()
         _watchCount.value = newCount
         val unlocked = repository.isUnlockedForToday()
         _isUnlocked.value = unlocked
-        _showTestAdSimulator.value = false
 
         if (unlocked) {
             _snackbarMessage.value = "تهانينا! اكتملت المشاهدات (3/3)، تم فتح جميع القنوات حتى الغد!"
         } else {
-            _snackbarMessage.value = "تم احتساب المشاهدة ($newCount / 3). تبقى ${3 - newCount} لفتح القنوات."
+            if (wasAdShown) {
+                _snackbarMessage.value = "تم احتساب المشاهدة ($newCount / 3). تبقى ${3 - newCount} لفتح القنوات."
+            } else {
+                _snackbarMessage.value = "لا يتوفر إعلان حالياً، تم احتساب المشاهدة لك مباشرة! ($newCount / 3)"
+            }
         }
     }
 
@@ -191,10 +165,6 @@ class IptvViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setShowAddDialog(show: Boolean) {
         _showAddDialog.value = show
-    }
-
-    fun setShowTestAdSimulator(show: Boolean) {
-        _showTestAdSimulator.value = show
     }
 
     fun setShowAdSettingsDialog(show: Boolean) {

@@ -57,9 +57,9 @@ android {
     debug {
       isDebuggable = true
       signingConfig = signingConfigs.getByName("debugConfig")
-      buildConfigField("String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/5224354917\"")
-      buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\"")
-      manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
+      buildConfigField("String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-8410578267301371/4181816334\"")
+      buildConfigField("String", "ADMOB_APP_ID", "\"ca-app-pub-8410578267301371~7948926096\"")
+      manifestPlaceholders["admobAppId"] = "ca-app-pub-8410578267301371~7948926096"
     }
   }
   compileOptions {
